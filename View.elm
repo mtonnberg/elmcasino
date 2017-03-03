@@ -5,16 +5,8 @@ import Messages exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Updates.Score as Score exposing (..)
-import Updates.Theme as Theme exposing (..)
-
-renderDebugToggle model = span [
-          class "debugToggle"
-          --, onClick Debug.ToggleDebug
-        ]
-        [text model.debugText]
-
-renderDebugger model = div [class "debug-window", style [("display", "none")]] []
+import Updates.Score as Score exposing (Msg)
+import Updates.Theme as Theme exposing (Msg)
 
 renderHeader = header [] [h1 [] [ text "Casino"]]
 
@@ -37,13 +29,11 @@ view model =
   let color = if model.theme == Light then "#CCC" else "#888"
   in
   div [class "background", style [("background-color", color)]] [
-    div [id "container"]
+    Html.node "link" [ Html.Attributes.rel "stylesheet", Html.Attributes.href "casino.css" ] []
+    ,div [id "container"]
       [ 
         div [] 
-        [
-          renderDebugToggle model
-        , renderDebugger model
-        , renderHeader
+        [ renderHeader
         , renderInstructions model.targetScore
         , renderCurrentScore model.score
         , renderAdd2Button
@@ -58,14 +48,3 @@ view model =
         ]
       ]
   ]
-
-  --   button, onClick add', num: 2 })}>Add 2
-  --   button, onClick add', num: 4 })}>Add 4
-  --   button, onClick add', num: 8 })}>Add 8
-  --   button [class "subtract-btn", onClick subtract', num: 6 })}>Subtract 6
-  --   button [class "double-btn", onClick double' })}>Double
-  --   <br />
-  --   button [class "theme-btn", onClick setDarkTheme' })}>Use dark theme
-  --   button [class "theme-btn", onClick setLightTheme' })}>Use light theme
-  --   button [class "reset-btn", onClick reset' })}>reset
-  -- </div>

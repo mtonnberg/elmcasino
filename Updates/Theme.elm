@@ -7,4 +7,4 @@ type Msg =
 update : Msg -> CasinoModel -> (CasinoModel, Cmd Msg)
 update msg model =
     case msg of
-        SetTheme theme -> ({model | theme = theme}, Cmd.none)
+        SetTheme theme -> {model | theme = theme} ! []

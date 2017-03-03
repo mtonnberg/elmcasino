@@ -20,4 +20,4 @@ initialModel = CasinoModel 0 7 Light "debug ⇩"
 
 
 init : (CasinoModel, Cmd Msg)
-init = (initialModel, Cmd.none)
+init = initialModel ! [Cmd.none]
