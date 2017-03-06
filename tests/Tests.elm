@@ -2,33 +2,65 @@ module Tests exposing (..)
 
 import Test exposing (..)
 import Expect
-import Fuzz exposing (list, int, tuple, string)
+import Fuzz exposing (..)
+import Messages as CasinoMessages exposing (..)
+import Updates.Score as Score
+import Updates.Theme exposing (..)
+import CasinoModel exposing (..)
 import String
+import Random.Pcg as Random
+import Random as Ran
+import Shrink
+
+scoreMessageGenerator = 
+    Random.int 0 6 |> Random.andThen (\i ->
+    case i of
+        0 -> Random.map Score.Add (Random.choices [ Random.constant 2, Random.constant 4, Random.constant 8])
+        1 -> Random.map Score.Subtract (Random.choices [ Random.constant 6])
+        _ -> Random.constant Score.Double
+    )
+
+    --       Add Int
+    -- | Subtract Int
+    -- | Half
+    -- | Double
+    -- | ResetScore
+
+themeMessageGenerator = 
+    Random.bool |> Random.andThen (\b ->
+    if b then
+        Random.constant (SetTheme CasinoModel.Dark)
+    else
+        Random.constant (SetTheme CasinoModel.Light)
+        -- Random.map (CasinoModel.Light (Random.int 0 12)
+    )
+
+casinoMessageGenerator : Random.Generator CasinoMessages.Msg
+casinoMessageGenerator = 
+    Random.bool |> Random.andThen (\b ->
+    if b then
+        Random.map CasinoMessages.Score scoreMessageGenerator
+    else
+        Random.map CasinoMessages.Theme themeMessageGenerator
+    )
 
 
-all : Test
-all =
-    describe "Sample Test Suite"
-        [ describe "Unit test examples"
-            [ test "Addition" <|
-                \() ->
-                    Expect.equal (3 + 7) 10
-            , test "String.left" <|
-                \() ->
-                    Expect.equal "a" (String.left 1 "abcdefg")
-            ]
-        , describe "Fuzz test examples, using randomly generated input"
-            [ fuzz (list int) "Lists always have positive length" <|
-                \aList ->
-                    List.length aList |> Expect.atLeast 0
-            , fuzz (list int) "Sorting a list does not change its length" <|
-                \aList ->
-                    List.sort aList |> List.length |> Expect.equal (List.length aList)
-            , fuzzWith { runs = 1000 } int "List.member will find an integer in a list containing it" <|
-                \i ->
-                    List.member i [ i ] |> Expect.true "If you see this, List.member returned False!"
-            , fuzz2 string string "The length of a string equals the sum of its substrings' lengths" <|
-                \s1 s2 ->
-                    s1 ++ s2 |> String.length |> Expect.equal (String.length s1 + String.length s2)
-            ]
-        ]
+casinoMessageShrinker : Shrink.Shrinker CasinoMessages.Msg
+casinoMessageShrinker message = Shrink.noShrink message
+
+aCasinoMessage : Fuzzer CasinoMessages.Msg
+aCasinoMessage =
+    let
+      generator = casinoMessageGenerator
+      shrinker = casinoMessageShrinker
+    in
+    Fuzz.custom generator shrinker
+
+all = describe "all tests" 
+    [ fuzz aCasinoMessage "only dark themes are incorrectly valid" dummyTest
+    ]
+
+dummyTest message =
+    case message of
+    Theme (SetTheme t) -> Expect.equal t CasinoModel.Dark
+    _ -> Expect.equal 1 1
