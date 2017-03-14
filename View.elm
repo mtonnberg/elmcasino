@@ -29,8 +29,9 @@ view model =
   let color = if model.theme == Light then "#CCC" else "#888"
   in
   div [class "background", style [("background-color", color)]] [
-    Html.node "link" [ Html.Attributes.rel "stylesheet", Html.Attributes.href "casino.css" ] []
-    ,div [id "container"]
+      Html.node "link" [ Html.Attributes.rel "stylesheet", Html.Attributes.href "casino.css" ] []
+    , Html.node "link" [ Html.Attributes.rel "stylesheet", Html.Attributes.href "http://fonts.googleapis.com/css?family=Poiret+One" ] []
+    , div [id "container"]
       [ 
         div [] 
         [ renderHeader

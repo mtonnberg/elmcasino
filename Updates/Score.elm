@@ -19,6 +19,7 @@ update msg model =
 
 
 
+
 doubleScore model = 
     if model.theme == Dark then
         {model | score = ((model.score*2)-1)} ! []

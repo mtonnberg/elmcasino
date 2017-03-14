@@ -30,5 +30,8 @@ calcModelAndCheckExpectation update startModel expect msgs =
         Nothing -> Expect.fail "expectation failed"
 
 
-appFuzzTest initModel name expectation = 
-    fuzz (Fuzz.list aCasinoMessage) name <| (calcModelAndCheckExpectation Update.update initModel expectation)    
+appFuzzTest initModel name expectation =
+    let
+      test =  calcModelAndCheckExpectation Update.update initModel expectation
+    in
+    fuzz (Fuzz.list aCasinoMessage) name test
