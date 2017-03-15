@@ -1,6 +1,7 @@
 module CasinoFuzzTestHelper exposing (appFuzzTest)
 
 import Test exposing (..)
+import Either exposing (..)
 import CasinoGenerator exposing (..)
 import Expect exposing (..)
 import Fuzz exposing (..)
@@ -8,26 +9,38 @@ import Messages as CasinoMessages exposing (..)
 import Update exposing (..)
 import CasinoModel exposing (..)
 
-updateWithMessageAndCheckExpectation: (CasinoMessages.Msg -> CasinoModel -> ( CasinoModel, Cmd CasinoMessages.Msg )) -> (CasinoModel -> Expect.Expectation) -> CasinoMessages.Msg -> Maybe CasinoModel -> Maybe CasinoModel
-updateWithMessageAndCheckExpectation update expect msg maybeModel =
-    case maybeModel of
-        Nothing -> Nothing
-        Just model ->
+updateWithMessageAndCheckExpectation
+    : (CasinoMessages.Msg -> CasinoModel -> ( CasinoModel, Cmd CasinoMessages.Msg ))
+    -> (CasinoModel -> Expectation)
+    -> Msg
+    -> Either ( CasinoModel, { given : String, message : String } ) CasinoModel
+    -> Either ( CasinoModel, { given : String, message : String } ) CasinoModel
+
+updateWithMessageAndCheckExpectation update expect msg eitherResult =
+    case eitherResult of
+        Left failed -> Left failed
+        Right model ->
             let (newModel, cmd) = Update.update msg model
             in
             case Expect.getFailure (expect newModel) of
-                Nothing -> Just newModel
-                Just failure -> Nothing
+                Nothing -> Right newModel
+                Just failure -> Left (newModel, failure)
 
 
-calcModelAndCheckExpectation: (CasinoMessages.Msg -> CasinoModel -> ( CasinoModel, Cmd CasinoMessages.Msg )) -> CasinoModel -> (CasinoModel -> Expect.Expectation) -> List CasinoMessages.Msg -> Expect.Expectation
+calcModelAndCheckExpectation
+    : (CasinoMessages.Msg -> CasinoModel -> ( CasinoModel, Cmd CasinoMessages.Msg ))
+    -> CasinoModel
+    -> (CasinoModel -> Expect.Expectation)
+    -> List CasinoMessages.Msg
+    -> Expect.Expectation
+
 calcModelAndCheckExpectation update startModel expect msgs = 
     let
-        maybeResultingModel = List.foldl (updateWithMessageAndCheckExpectation update expect) (Just startModel) msgs
+        maybeResultingModel = List.foldl (updateWithMessageAndCheckExpectation update expect) (Right startModel) msgs
     in
     case maybeResultingModel of
-        Just model -> Expect.pass
-        Nothing -> Expect.fail "expectation failed"
+        Right model -> Expect.pass
+        Left (finalModel, failure) -> Expect.fail (failure.message ++ "\nfinalmodel: " ++ (toString finalModel) ++ "\n\n" )
 
 
 appFuzzTest initModel name expectation =
